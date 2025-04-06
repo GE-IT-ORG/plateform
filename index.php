@@ -14,7 +14,7 @@ $currentYear = date("Y");
 $calendars = [
     'L1' => [
         'semester1' => [
-            ['title' => 'Rentrée académique', 'date' => '06 juin 2006', 'color' => 'blue'],
+            ['title' => 'Rentrée académique', 'date' => '06 juin 2022clear', 'color' => 'blue'],
             ['title' => 'Examens de mi-parcours', 'date' => '10 - 15 novembre 2023', 'color' => 'orange'],
             ['title' => 'Vacances de fin d\'année', 'date' => '20 décembre 2023 - 5 janvier 2024', 'color' => 'green'],
             ['title' => 'Examens finaux', 'date' => '15 - 25 janvier 2024', 'color' => 'red']
