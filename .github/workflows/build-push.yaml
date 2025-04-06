@@ -29,7 +29,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push API image
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -39,3 +39,8 @@ jobs:
             ankoayfeno/plateform:${{ needs.generate-tag.outputs.hex_tag }}
             ankoayfeno/plateform:latest
           build-args: ENVIRONMENT=prod
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: curl hook url
+        run: curl ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
