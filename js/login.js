@@ -1,11 +1,12 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const loginBtn = document.getElementById('login-btn');
     const loginModal = document.getElementById('login-modal');
     const modalContent = document.getElementById('login-modal-content');
     const closeLoginModal = document.getElementById('close-login-modal');
     const loginForm = document.getElementById('login-form');
+    const loginError = document.getElementById('login-error');
 
-    loginBtn.addEventListener('click', function(e) {
+    loginBtn.addEventListener('click', function (e) {
         e.preventDefault();
         loginModal.classList.remove('hidden');
         setTimeout(() => {
@@ -24,56 +25,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     closeLoginModal.addEventListener('click', closeLoginModalHandler);
 
-    loginForm.addEventListener('submit', function(e) {
+    loginForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        
+
         const formData = new FormData(loginForm);
 
-        fetch('../projetGE-IT/auth/signin.php', {
+        fetch('auth/signin.php', {
             method: 'POST',
-            body: formData 
+            body: formData
         })
         .then(response => {
             if (!response.ok) {
-                // Affiche un message d'erreur détaillé si la réponse n'est pas ok
                 throw new Error('Erreur de serveur: ' + response.statusText);
             }
-            return response.text();  // On récupère la réponse brute
+            return response.text();
         })
         .then(responseText => {
-            console.log('Réponse du serveur:', responseText);  // Affiche la réponse brute
+            console.log('Réponse brute du serveur :', responseText);
 
             try {
-                // Si la réponse est une page HTML d'erreur (comme une erreur 404)
                 if (responseText.includes('<html>')) {
-                    throw new Error('La réponse du serveur est une page HTML d\'erreur');
-                    document.getElementById('login-error').textContent = 'Erreur serveur. Essayez encore.';
-                    document.getElementById('login-error').classList.remove('hidden');
+                    loginError.textContent = 'Erreur serveur. Essayez encore.';
+                    loginError.classList.remove('hidden');
                     return;
                 }
-                
+
                 const data = JSON.parse(responseText);
-                  // On tente de parser la réponse JSON
-                  console.log("Response from server:", data);
-                  data = JSON.parse(responseText);
 
                 if (data.success) {
-                    window.location.href = '../home.php';
-                    
+                    // Redirection dynamique selon le rôle
+                    window.location.href = data.redirect;
                 } else {
-                    document.getElementById('login-error').textContent = data.message;
-                    document.getElementById('login-error').classList.remove('hidden');
+                    loginError.textContent = data.message;
+                    loginError.classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Erreur de parsing JSON:', error);
-                document.getElementById('login-error').textContent = 'Erreur de connexion. Vérifiez vos identifiants.';
-                document.getElementById('login-error').classList.remove('hidden');
+                loginError.textContent = 'Erreur de connexion. Vérifiez vos identifiants.';
+                loginError.classList.remove('hidden');
             }
         })
         .catch(error => {
-            console.error('Erreur:', error);
-            document.getElementById('login-error').textContent = 'Erreur lors de la connexion. Veuillez réessayer.';
-            document.getElementById('login-error').classList.remove('hidden');
+            console.error('Erreur de requête fetch :', error);
+            loginError.textContent = 'Erreur lors de la connexion. Veuillez réessayer.';
+            loginError.classList.remove('hidden');
         });
     });
 });

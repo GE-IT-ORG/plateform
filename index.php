@@ -151,6 +151,7 @@ $specializedTracks = [
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/dark-theme.css">
     <link rel="stylesheet" href="./css/light-theme.css">
+    <link rel="shortcut icon" href="./img/" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
@@ -553,9 +554,9 @@ $specializedTracks = [
             
             <div class="flex items-center">
                 <div class="bg-white dark:bg-gray-700 p-2 rounded-lg">
-                    <img src="./img/logo.jpeg" alt="Logo" class="h-10 w-auto object-contain">
+                    <img src="./img/449483797_122095244054398716_1955813011609173289_n-removebg-preview copy.png" alt="Logo" class="h-20 w-auto object-contain">
                 </div>
-                <span class="ml-2 text-xl font-bold text-ge-orange">GE-IT</span>
+                <!-- <span class="ml-2 text-xl font-bold text-ge-orange">GE-IT</span> -->
             </div>
         </div>
         
@@ -655,7 +656,7 @@ $specializedTracks = [
                     <option value="L3">L3</option>
                     <option value="M1">M1</option>
                     <option value="M2">M2</option>
-                </select>
+                </select>   
             </div>
             
             <button type="submit" class="w-full bg-ge-orange hover:bg-ge-orange-dark text-white font-medium py-2 px-4 rounded-md transition-colors duration-300">
@@ -1083,9 +1084,9 @@ $specializedTracks = [
                 <div>
                     <div class="flex items-center mb-4">
                         <div class="bg-white p-2 rounded-lg">
-                            <img src="./img/logo.jpeg" alt="Logo" class="h-8 w-auto object-contain">
+                            <img src="./img/449483797_122095244054398716_1955813011609173289_n-removebg-preview copy.png" alt="Logo" class="h-20 w-auto object-contain">
                         </div>
-                        <span class="ml-2 text-xl font-bold text-ge-orange">GE-IT</span>
+                        <!-- <span class="ml-2 text-xl font-bold text-ge-orange">GE-IT</span> -->
                     </div>
                     <p class="text-gray-400 mb-4">Grande École de l'Innovation Technologique - L'excellence numérique à Madagascar</p>
                     <div class="flex space-x-4">
