@@ -2,37 +2,60 @@
 session_start();
 require '../includes/db-connect.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json');  // On indique qu'on retourne du JSON
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = trim($_POST["username"]);
-    $mdp = trim($_POST["mdp"]);
-    $niveau = trim($_POST["niveau"]);
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Nettoyage des champs
+    $username = trim($_POST["username"] ?? '');
+    $password = trim($_POST["password"] ?? '');
+    $niveau = trim($_POST["niveau"] ?? '');
 
-    // Vérifier si l'utilisateur existe dans la base de données
+    if (empty($username) || empty($password) || empty($niveau)) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Tous les champs sont requis."
+        ]);
+        exit;
+    }
+
     try {
-        // Préparer la requête pour récupérer l'utilisateur en fonction du username et du niveau
-        $query = $conn->prepare("SELECT id_etudiant, username, mdp FROM etudiants WHERE username = ? AND niveau = ?");
+        // Requête sécurisée
+        $query = $conn->prepare("SELECT id_etudiant, username, mdp, niveau FROM etudiants WHERE username = ? AND niveau = ?");
         $query->execute([$username, $niveau]);
         $user = $query->fetch(PDO::FETCH_ASSOC);
 
-        // Vérifier si l'utilisateur existe et si le mot de passe est correct
-        if ($user && password_verify($mdp, $user['mdp'])) {
-            // Enregistrer les informations de l'utilisateur dans la session
-            $_SESSION["id_etudiant"] = $user["id_etudiant"];
-            $_SESSION["username"] = $user["username"];
-            $_SESSION["niveau"] = $niveau;
+        if ($user) {
+            if ($password === $user['mdp']) {
+                // Connexion OK
+                $_SESSION["id_etudiant"] = $user["id_etudiant"];
+                $_SESSION["username"] = $user["username"];
+                $_SESSION["niveau"] = $niveau;
 
-            // Rediriger vers la page d'accueil
-            header("Location: ../home.php");
-            exit();
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Connexion réussie."
+                ]);
+            } else {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Mot de passe incorrect."
+                ]);
+            }
         } else {
-            // Message d'erreur si les identifiants sont incorrects
-            echo "Identifiants incorrects.";
+            echo json_encode([
+                "success" => false,
+                "message" => "Utilisateur non trouvé."
+            ]);
         }
     } catch (PDOException $e) {
-        // En cas d'erreur lors de l'exécution de la requête
-        echo "Erreur de connexion à la base de données: " . $e->getMessage();
+        echo json_encode([
+            "success" => false,
+            "message" => "Erreur de connexion à la base de données."
+        ]);
     }
+} else {
+    echo json_encode([
+        "success" => false,
+        "message" => "Requête invalide."
+    ]);
 }
-?>

@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const formData = new FormData(loginForm);
 
-        fetch('/projetGE-IT/auth/signin.php', {
+        fetch('../projetGE-IT/auth/signin.php', {
             method: 'POST',
             body: formData 
         })
@@ -47,11 +47,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Si la réponse est une page HTML d'erreur (comme une erreur 404)
                 if (responseText.includes('<html>')) {
                     throw new Error('La réponse du serveur est une page HTML d\'erreur');
+                    document.getElementById('login-error').textContent = 'Erreur serveur. Essayez encore.';
+                    document.getElementById('login-error').classList.remove('hidden');
+                    return;
                 }
                 
-                const data = JSON.parse(responseText);  // On tente de parser la réponse JSON
+                const data = JSON.parse(responseText);
+                  // On tente de parser la réponse JSON
+                  console.log("Response from server:", data);
+                  data = JSON.parse(responseText);
+
                 if (data.success) {
                     window.location.href = '../home.php';
+                    
                 } else {
                     document.getElementById('login-error').textContent = data.message;
                     document.getElementById('login-error').classList.remove('hidden');
