@@ -151,7 +151,7 @@ $specializedTracks = [
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/dark-theme.css">
     <link rel="stylesheet" href="./css/light-theme.css">
-    <link rel="shortcut icon" href="./img/449483797_122095244054398716_1955813011609173289_n-removebg-preview copy.png" type="image/x-icon">
+    <link rel="shortcut icon" href="./img/" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>

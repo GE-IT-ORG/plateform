@@ -2,6 +2,8 @@
 // Démarrer la session
 session_start();
 
+require_once './includes/db-connect.php';
+
 // Vérifier si l'utilisateur est connecté en tant qu'administrateur
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['role'] !== 'admin') {
     // Rediriger vers la page de connexion
@@ -24,7 +26,6 @@ $photo = $admin['photo'] ?? './img/utilisateur.png';
 
 // Données fictives pour la démonstration (dans un vrai système, ces données viendraient de la base de données)
 $statistiques = [
-    'etudiants' => 450,
     'enseignants' => 34,
     'cours' => 28,
     'paiements_mois' => 15000000,
@@ -35,16 +36,6 @@ $statistiques = [
 $niveaux = ['L1', 'L2', 'L3', 'M1', 'M2'];
 
 // Données pour les étudiants
-$etudiants = [
-    ['id' => 1, 'matricule' => 'ET2023001', 'nom' => 'RAKOTO', 'prenom' => 'Jean', 'niveau' => 'L1', 'email' => 'jean.rakoto@etudiant.ge-it.com', 'statut' => 'Actif'],
-    ['id' => 2, 'matricule' => 'ET2023002', 'nom' => 'RABE', 'prenom' => 'Marie', 'niveau' => 'L1', 'email' => 'marie.rabe@etudiant.ge-it.com', 'statut' => 'Actif'],
-    ['id' => 3, 'matricule' => 'ET2023003', 'nom' => 'RANDRIA', 'prenom' => 'Paul', 'niveau' => 'L2', 'email' => 'paul.randria@etudiant.ge-it.com', 'statut' => 'Actif'],
-    ['id' => 4, 'matricule' => 'ET2023004', 'nom' => 'RAZAFY', 'prenom' => 'Sophie', 'niveau' => 'L2', 'email' => 'sophie.razafy@etudiant.ge-it.com', 'statut' => 'Actif'],
-    ['id' => 5, 'matricule' => 'ET2023005', 'nom' => 'ANDRIA', 'prenom' => 'Luc', 'niveau' => 'L3', 'email' => 'luc.andria@etudiant.ge-it.com', 'statut' => 'Actif'],
-    ['id' => 6, 'matricule' => 'ET2022001', 'nom' => 'RAKOTONDRABE', 'prenom' => 'Soa', 'niveau' => 'M1', 'email' => 'soa.rakotondrabe@etudiant.ge-it.com', 'statut' => 'Actif'],
-    ['id' => 7, 'matricule' => 'ET2022002', 'nom' => 'RABEMANANJARA', 'prenom' => 'Eric', 'niveau' => 'M2', 'email' => 'eric.rabemananjara@etudiant.ge-it.com', 'statut' => 'Actif'],
-    ['id' => 8, 'matricule' => 'ET2021001', 'nom' => 'JOHNSON', 'prenom' => 'Sarah', 'niveau' => 'M2', 'email' => 'sarah.johnson@etudiant.ge-it.com', 'statut' => 'Inactif'],
-];
 
 // Données pour les enseignants
 $enseignants = [
@@ -87,6 +78,79 @@ function formaterMontant($montant) {
     return number_format($montant, 0, ',', ' ') . ' Ar';
 }
 
+// Remplacer les données statiques par une requête à la base de données
+function getEtudiants() {
+    global $conn;
+    
+    try {
+        $stmt = $conn->query("SELECT * FROM etudiants WHERE statut != 'Supprimé' ORDER BY niveau, nom, prenom");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Erreur lors de la récupération des étudiants: " . $e->getMessage());
+        return []; // Retourner un tableau vide en cas d'erreur
+    }
+}
+
+// Filtrer les étudiants par niveau
+function filtrerEtudiantsParNiveau($etudiants, $niveau) {
+    return array_filter($etudiants, function($e) use ($niveau) {
+        return $e['niveau'] === $niveau;
+    });
+}
+
+// Mettre à jour les statistiques pour le tableau de bord
+function compterEtudiantsParNiveau($etudiants) {
+    $compteur = [
+        'L1' => 0,
+        'L2' => 0,
+        'L3' => 0,
+        'M1' => 0,
+        'M2' => 0
+    ];
+    
+    foreach ($etudiants as $etudiant) {
+        if (isset($compteur[$etudiant['niveau']])) {
+            $compteur[$etudiant['niveau']]++;
+        }
+    }
+    
+    return $compteur;
+}
+
+// Calculer les pourcentages pour le graphique
+function calculerPourcentages($compteur) {
+    $total = array_sum($compteur);
+    if ($total === 0) return array_fill_keys(array_keys($compteur), 0);
+    
+    $pourcentages = [];
+    foreach ($compteur as $niveau => $nombre) {
+        $pourcentages[$niveau] = round(($nombre / $total) * 100);
+    }
+    
+    return $pourcentages;
+}
+
+
+
+$etudiants = getEtudiants();
+$compteur_niveaux = compterEtudiantsParNiveau($etudiants); // <-- à ajouter
+$pourcentages = calculerPourcentages($compteur_niveaux);   // <-- déjà utilisé sûrement
+
+// Calculer les pourcentages
+$pourcentages = calculerPourcentages($compteur_niveaux);
+// Compter les étudiants par niveau
+$compteur_niveaux = compterEtudiantsParNiveau($etudiants);
+// Utiliser cette fonction pour chaque niveau
+$etudiants_l1 = filtrerEtudiantsParNiveau($etudiants, 'L1');
+$etudiants_l2 = filtrerEtudiantsParNiveau($etudiants, 'L2');
+$etudiants_l3 = filtrerEtudiantsParNiveau($etudiants, 'L3');
+$etudiants_m1 = filtrerEtudiantsParNiveau($etudiants, 'M1');
+$etudiants_m2 = filtrerEtudiantsParNiveau($etudiants, 'M2');
+// Récupérer tous les étudiants
+$etudiants = getEtudiants();
+
+// Compter le nombre total d'étudiants
+$statistiques['etudiants'] = count($etudiants);
 // Récupérer le thème préféré de l'utilisateur (cookie ou localStorage)
 $theme = isset($_COOKIE['theme']) ? $_COOKIE['theme'] : 'light';
 ?>
@@ -697,6 +761,15 @@ $theme = isset($_COOKIE['theme']) ? $_COOKIE['theme'] : 'light';
                         <span class="sidebar-text">Notes</span>
                     </a>
                 </li>
+                <li>
+                    <a href="#notes" class="nav-link flex items-center p-3" data-target="notes-section">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 sidebar-icon text-ge-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A9.953 9.953 0 0112 15c2.21 0 4.245.715 5.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+
+                        <span class="sidebar-text">Présence</span>
+                    </a>
+                </li>
                 <li class="pt-4 mt-4 border-t border-theme">
                     <a href="#parametres" class="nav-link flex items-center p-3" data-target="parametres-section">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 sidebar-icon text-ge-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -707,7 +780,7 @@ $theme = isset($_COOKIE['theme']) ? $_COOKIE['theme'] : 'light';
                     </a>
                 </li>
                 <li>
-                    <a href="logout.php" class="nav-link flex items-center p-3">
+                    <a href="./logout.php" class="nav-link flex items-center p-3">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 sidebar-icon text-ge-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
@@ -874,20 +947,9 @@ $theme = isset($_COOKIE['theme']) ? $_COOKIE['theme'] : 'light';
                         <?php foreach ($niveaux as $index => $niveau): ?>
                         <div class="bg-tertiary p-4 rounded-lg text-center">
                             <div class="text-3xl font-bold mb-2 text-ge-orange">
-                                <?php 
-                                // Simuler un nombre d'étudiants par niveau
-                                $nombre = 0;
-                                switch ($niveau) {
-                                    case 'L1': $nombre = 150; break;
-                                    case 'L2': $nombre = 120; break;
-                                    case 'L3': $nombre = 90; break;
-                                    case 'M1': $nombre = 60; break;
-                                    case 'M2': $nombre = 30; break;
-                                }
-                                echo $nombre;
-                                ?>
+                                <?php echo $compteur_niveaux[$niveau]; ?>
                             </div>
-                            <div class="text-sm font-medium"><?php echo $niveau; ?></div>
+                            <div class="text-sm font-medium"> <?php echo $niveau ?> </div>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -910,10 +972,9 @@ $theme = isset($_COOKIE['theme']) ? $_COOKIE['theme'] : 'light';
                         
                         <div class="flex justify-between mt-4">
                             <?php foreach ($niveaux as $index => $niveau): ?>
-                            ?>
                             <div class="flex items-center">
                                 <div class="w-3 h-3 rounded-full <?php echo $colors[$index]; ?> mr-2"></div>
-                                <span class="text-sm"><?php echo $niveau; ?></span>
+                                <span class="text-sm"> <?php echo $niveau; ?> </span>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -1319,6 +1380,103 @@ $theme = isset($_COOKIE['theme']) ? $_COOKIE['theme'] : 'light';
                     </div>
                 </div>
             </div>
+
+            
+            <!-- Modal pour ajouter un étudiant -->
+<div id="add-student-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-primary">Ajouter un étudiant</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="add-student-form" action="./controllers/etudiant_add.php" method="POST" class="space-y-4">
+                <div>
+                    <label for="matricule" class="block text-sm font-medium text-secondary mb-1">Numéro Matricule</label>
+                    <input type="text" id="matricule" name="matricule" required class="w-full px-4 py-2 border border-theme rounded-lg focus:outline-none focus:ring-2 focus:ring-ge-orange focus:border-transparent" placeholder="ex : 0000-0000-00000">
+                </div>
+                
+                <div>
+                    <label for="nom" class="block text-sm font-medium text-secondary mb-1">Nom</label>
+                    <input type="text" id="nom" name="nom" required class="w-full px-4 py-2 border border-theme rounded-lg focus:outline-none focus:ring-2 focus:ring-ge-orange focus:border-transparent"  placeholder="nom">
+                </div>
+                
+                <div>
+                    <label for="prenom" class="block text-sm font-medium text-secondary mb-1">Prénom</label>
+                    <input type="text" id="prenom" name="prenom" required class="w-full px-4 py-2 border border-theme rounded-lg focus:outline-none focus:ring-2 focus:ring-ge-orange focus:border-transparent"placeholder="prenom">
+                </div>
+                
+                <div>
+                    <label for="email" class="block text-sm font-medium text-secondary mb-1">Email</label>
+                    <input type="email" id="email" name="email" required class="w-full px-4 py-2 border border-theme rounded-lg focus:outline-none focus:ring-2 focus:ring-ge-orange focus:border-transparent"placeholder="mimi@gmail.com">
+                </div>
+                
+                <div>
+                    <label for="niveau" class="block text-sm font-medium text-secondary mb-1">Niveau</label>
+                    <select id="niveau" name="niveau" required class="w-full px-4 py-2 border border-theme rounded-lg focus:outline-none focus:ring-2 focus:ring-ge-orange focus:border-transparent">
+                        <option value="L1">L1</option>
+                        <option value="L2">L2</option>
+                        <option value="L3">L3</option>
+                        <option value="M1">M1</option>
+                        <option value="M2">M2</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="statut" class="block text-sm font-medium text-secondary mb-1">Statut</label>
+                    <select id="status" name="status" required class="w-full px-4 py-2 border border-theme rounded-lg focus:outline-none focus:ring-2 focus:ring-ge-orange focus:border-transparent">
+                        <option value="Actif">Actif</option>
+                        <option value="Inactif">Inactif</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" id="cancel-add" class="px-4 py-2 border border-theme rounded-lg hover:bg-tertiary">
+                        Annuler
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-ge-orange text-white rounded-lg hover:bg-ge-orange-dark">
+                        Ajouter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script pour gérer le modal -->
+<script>
+    // Sélectionner les éléments du DOM
+    const addStudentBtn = document.querySelector('button.btn-primary');
+    const modal = document.getElementById('add-student-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const cancelAddBtn = document.getElementById('cancel-add');
+    
+    // Ouvrir le modal quand on clique sur le bouton "Ajouter un étudiant"
+    addStudentBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+    });
+    
+    // Fermer le modal quand on clique sur le bouton de fermeture ou sur Annuler
+    closeModalBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    cancelAddBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    // Fermer le modal quand on clique en dehors du modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+</script>
         </section>
 
         <!-- Enseignants Section -->
